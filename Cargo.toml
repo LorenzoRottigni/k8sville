@@ -14,7 +14,7 @@ tokio = { version = "1.37", features = ["macros", "rt-multi-thread"] }
 serde = { version = "1", features = ["derive"] }
 anyhow = "1.0.98"
 rpgx = { git = "https://github.com/LorenzoRottigni/rpgx.git", package = "rpgx" }
-rpgx-dioxus = { git = "https://github.com/LorenzoRottigni/rpgx.git", package = "rpgx-dioxus" }
+rpgx-dioxus = { git = "https://github.com/LorenzoRottigni/rpgx.git", package = "rpgx-dioxus", features = ["desktop"] }
 
 [features]
 default = ["desktop"]
