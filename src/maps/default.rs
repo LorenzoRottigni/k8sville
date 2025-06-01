@@ -1,7 +1,9 @@
-use rpgx::{library::ResourceLibrary, prelude::*};
+use std::any::Any;
+
+use rpgx::{library::Library, prelude::*};
 use crate::presets::namespace::namespace_map;
 
-pub fn default_map(library: &ResourceLibrary, namespaces: &Vec<String>) -> Map {
+pub fn default_map(library: &Library<Box<dyn Any>>, namespaces: &Vec<String>) -> Map {
     let total = namespaces.len();
     if total == 0 {
         return Map::new("default".into(), vec![]);

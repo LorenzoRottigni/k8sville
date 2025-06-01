@@ -28,9 +28,10 @@ fn App() -> Element {
                     if let Some(tile) = layer.get_tile_at(Coordinates { x: 0, y: 0 }) {
                         let pawn = Pawn {
                             tile,
-                            texture_id: k8s_library.read().get_key_id("character_1"),
+                            texture_id: k8s_library.read().get_id("character_1").unwrap(),
                         };
-                        let engine = use_signal(|| Engine::new(map, pawn));
+                        let scene = Scene::new("default".into(),map,pawn);
+                        let engine = use_signal(|| Engine::new(scene));
                         rsx! {
                             div { class: "cluster",
                                 rpgx_dioxus::components::engine::Engine {

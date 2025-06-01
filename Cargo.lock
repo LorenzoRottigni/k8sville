@@ -3892,7 +3892,7 @@ dependencies = [
 [[package]]
 name = "rpgx"
 version = "0.1.0"
-source = "git+https://github.com/LorenzoRottigni/rpgx.git#098d23a58e3f34e73438e680c223cf2de3b41030"
+source = "git+https://github.com/LorenzoRottigni/rpgx.git#84b2d642715824879bb5e9073bccf0072ed6680d"
 dependencies = [
  "indexmap 2.9.0",
 ]
@@ -3900,7 +3900,7 @@ dependencies = [
 [[package]]
 name = "rpgx-dioxus"
 version = "0.1.0"
-source = "git+https://github.com/LorenzoRottigni/rpgx.git#098d23a58e3f34e73438e680c223cf2de3b41030"
+source = "git+https://github.com/LorenzoRottigni/rpgx.git#84b2d642715824879bb5e9073bccf0072ed6680d"
 dependencies = [
  "dioxus",
  "dioxus-logger",
