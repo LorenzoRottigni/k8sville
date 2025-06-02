@@ -33,5 +33,13 @@ pub fn namespace_map(library: &Library<Box<dyn Any>>, _namespace: String) -> Map
         library.get_id("floor_2").unwrap(),
     ));
 
+    map.load_layer(Layer::new("sign".into(), LayerType::Block, Shape { width: 8, height: 10 }, vec![
+        Mask {
+            name: "sign".into(),
+            effect: Effect { render_id: library.get_id("sign"), group: true, ..Default::default() },
+            selector: Selector::Block((Coordinates { x: 6, y: 8 }, Coordinates { x: 7, y: 9 }))
+        }
+    ], 8 ));
+
     map
 }

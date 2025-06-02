@@ -18,6 +18,8 @@ fn App() -> Element {
         kube::fetch_k8s_data(PathBuf::from(r#"C:\Users\loren\Documents\credentials\kubeconfig-test.yml"#)).await
     });
 
+    let boxed_fn: Box<dyn Fn() -> Element> = Box::new(|| rsx! { div { class: "test", "Hello from box!" } });
+
     match &*kube_data.read_unchecked() {
         Some(Ok((namespaces, services, pods))) => {
             let k8s_library = use_signal(|| library::use_library());
@@ -40,6 +42,7 @@ fn App() -> Element {
                                     square_size: 32,
                                 }
                             }
+                            {boxed_fn()}
                         }
                     } else {
                         rsx! { div { "no base tile" } }

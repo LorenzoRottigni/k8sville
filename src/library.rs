@@ -1,5 +1,5 @@
 use std::any::Any;
-
+use dioxus::prelude::*;
 use rpgx::library::Library;
 
 pub fn use_library() -> Library<Box<dyn Any>> {
@@ -45,6 +45,17 @@ pub fn use_library() -> Library<Box<dyn Any>> {
     // Platform-agnostic action
     library.insert("consolelog", Box::new(|| {
         log_message("Hello from Rust!");
+    }));
+
+    library.insert("sign", Box::new(|| {
+        println!("Inserting a sign");
+        rsx!{
+            div {
+                class: "sign",
+                style: "width: 100%; height: 100%; background-color: red;",
+                "this is sign"
+            }
+        }
     }));
 
     library
