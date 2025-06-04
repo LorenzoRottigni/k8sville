@@ -2,7 +2,7 @@ use std::any::Any;
 use dioxus::prelude::*;
 use rpgx::library::Library;
 
-pub fn use_library() -> Library<Box<dyn Any>> {
+pub fn use_library(namespaces: Vec<String>) -> Library<Box<dyn Any>> {
     let mut library: Library<Box<dyn Any>> = Library::new();
 
     // Platform-agnostic logger
@@ -57,6 +57,25 @@ pub fn use_library() -> Library<Box<dyn Any>> {
             }
         }
     }));
+
+    for namespace in namespaces {
+        let key = format!("sign-ns-{}", namespace);
+        let ns = namespace.clone(); // 👈 capture value
+
+        library.insert(key, Box::new(Box::new(move || {
+            println!("Invoked render closure for sign");
+            rsx! {
+                div {
+                    class: "sign",
+                    style: "width: 100%; height: 100%; background-color: red;",
+                    {ns.clone()} // clone here to avoid move
+                }
+            }.unwrap()
+        }) as Box<dyn Fn() -> VNode>) as Box<dyn Any>);
+        
+    }
+
+    println!("{:?}", library.get_by_key("sign-ns-gitlab").is_some());
 
     library
 }

@@ -1,8 +1,8 @@
 use std::any::Any;
-
+use dioxus::prelude::*;
 use rpgx::{library::Library, prelude::*};
 
-pub fn namespace_map(library: &Library<Box<dyn Any>>, _namespace: String) -> Map {
+pub fn namespace_map(library: &Library<Box<dyn Any>>, namespace: String) -> Map {
     let mut map = rpgx::factory::map::presets::building::building_2x3(
         Shape {
             width: 4,
@@ -33,13 +33,21 @@ pub fn namespace_map(library: &Library<Box<dyn Any>>, _namespace: String) -> Map
         library.get_id("floor_2").unwrap(),
     ));
 
+    // insert dynamic sign and read it directly.
+    
+    let key: String = format!("sign-ns-{:}", namespace);
+    println!("Inserting sign {:?}", &key.clone());
+    
+
     map.load_layer(Layer::new("sign".into(), LayerType::Block, Shape { width: 8, height: 10 }, vec![
         Mask {
             name: "sign".into(),
-            effect: Effect { render_id: library.get_id("sign"), group: true, ..Default::default() },
-            selector: Selector::Block((Coordinates { x: 6, y: 8 }, Coordinates { x: 7, y: 9 }))
+            effect: rpgx::prelude::Effect { render_id: library.get_id(key), group: true, ..Default::default() },
+            selector: Selector::Block((Coordinates { x: 0, y: 0 }, Coordinates { x: 2, y: 2 }))
         }
     ], 8 ));
+
+    
 
     map
 }

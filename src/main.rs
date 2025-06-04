@@ -22,7 +22,7 @@ fn App() -> Element {
 
     match &*kube_data.read_unchecked() {
         Some(Ok((namespaces, services, pods))) => {
-            let k8s_library = use_signal(|| library::use_library());
+            let k8s_library = use_signal(|| library::use_library(namespaces.clone()));
             let map = maps::default::default_map(&k8s_library.read(), namespaces);
 
             match map.get_base_layer() {
@@ -42,7 +42,17 @@ fn App() -> Element {
                                     square_size: 32,
                                 }
                             }
-                            {boxed_fn()}
+                            {
+                                if let Some(f) = k8s_library.read()
+                                    .get_by_key("sign-ns-gitlab")
+                                    .unwrap()
+                                    .downcast_ref::<Box<dyn Fn() -> VNode>>()
+                                {
+                                    f()
+                                } else {
+                                    rsx! { div { "problems" }}.unwrap()
+                                }
+                            }
                         }
                     } else {
                         rsx! { div { "no base tile" } }
