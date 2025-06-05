@@ -71,7 +71,7 @@ pub fn use_library(namespaces: &Vec<String>, deployments: &Vec<(String, String)>
         engine.pop_scene();
     }) as Box<dyn Fn(&mut Engine)>) as Box<dyn Any>);
 
-    for (deployment, _) in deployments {
+    for (_namespace, deployment) in deployments {
         let key = format!("sign-deployment-{}", deployment);
         let ns = deployment.clone();
         println!("inserting namespace resources");
@@ -110,7 +110,7 @@ pub fn use_library(namespaces: &Vec<String>, deployments: &Vec<(String, String)>
         let key = format!("sign-ns-{}", namespace);
         let ns = namespace.clone();
         println!("inserting namespace resources");
-        let deployments_vec: Vec<String> = deployments.iter().map(|(d, _)| d.clone()).collect();
+        let deployments_vec: Vec<String> = deployments.iter().map(|(_, d)| d.clone()).collect();
 
         library.insert(format!("load-ns-{}", namespace), Box::new(Box::new({
             let ns = ns.clone();
