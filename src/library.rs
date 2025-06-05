@@ -2,7 +2,7 @@ use std::any::Any;
 use dioxus::prelude::*;
 use rpgx::{engine::Engine, library::Library, map::Map, pawn::Pawn, prelude::{Coordinates, Effect, Shape, Tile}, scene::Scene};
 
-pub fn use_library(namespaces: Vec<String>) -> Library<Box<dyn Any>> {
+pub fn use_library(namespaces: &Vec<String>, deployments: &Vec<(String, String)>, pods: &Vec<(String, String)>) -> Library<Box<dyn Any>> {
     let mut library: Library<Box<dyn Any>> = Library::new();
 
     // Platform-agnostic logger
@@ -35,6 +35,14 @@ pub fn use_library(namespaces: Vec<String>) -> Library<Box<dyn Any>> {
         Box::new("https://s3.rottigni.tech/rpgx/processor_9.webp".to_string()),
     );
     library.insert(
+        "deployment",
+        Box::new("https://s3.rottigni.tech/k8sville/k8sville_deployment.webp".to_string()),
+    );
+    library.insert(
+        "namespace",
+        Box::new("https://s3.rottigni.tech/k8sville/k8sville_namespace.webp".to_string()),
+    );
+    library.insert(
         "portal_1",
         Box::new("https://s3.rottigni.tech/rpgx/portal_1.webp".to_string()),
     );
@@ -63,22 +71,61 @@ pub fn use_library(namespaces: Vec<String>) -> Library<Box<dyn Any>> {
         engine.pop_scene();
     }) as Box<dyn Fn(&mut Engine)>) as Box<dyn Any>);
 
+    for (deployment, _) in deployments {
+        let key = format!("sign-deployment-{}", deployment);
+        let ns = deployment.clone();
+        println!("inserting namespace resources");
+        let deployments_vec: Vec<String> = deployments.iter().map(|(d, _)| d.clone()).collect();
+
+        library.insert(format!("load-deployment-{}", deployment), Box::new(Box::new({
+            let ns = ns.clone();
+            let deployments_vec = deployments_vec.clone();
+            let map = crate::maps::deployment::deployment_map(&library, &vec![]);
+            move |engine: &mut Engine| {
+                let pawn = engine.get_active_scene().unwrap().pawn.clone();
+                let ns_scene = Scene {
+                    name: format!("deployment-{}", ns.clone()),
+                    pawn: Pawn { texture_id: pawn.texture_id, tile: Tile::new(0, Effect::default(), Coordinates { x: 0, y: 0 }, Shape { ..Default::default() } )},
+                    map: map.clone()
+                };
+                println!("pushing scene");
+                engine.push_scene(ns_scene);
+            }
+        }) as Box<dyn Fn(&mut Engine)>) as Box<dyn Any>);
+
+        library.insert(key, Box::new(Box::new(move || {
+            println!("Invoked render closure for sign");
+            rsx! {
+                div {
+                    class: "sign",
+                    style: "width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; text-align: center; color: white; border: solid 2px black; border-radius: 5px;",
+                    {ns.clone()} // clone here to avoid move
+                }
+            }.unwrap()
+        }) as Box<dyn Fn() -> VNode>) as Box<dyn Any>);
+
+    }
+
     for namespace in namespaces {
         let key = format!("sign-ns-{}", namespace);
         let ns = namespace.clone();
-        let texture_floor_3 = library.get_id("floor_3").unwrap();
-        let action_go_back = library.get_id("go_back").unwrap();
         println!("inserting namespace resources");
+        let deployments_vec: Vec<String> = deployments.iter().map(|(d, _)| d.clone()).collect();
 
-        library.insert(format!("load-ns-{}", namespace), Box::new(Box::new(move |engine: &mut Engine| {
-            let pawn = engine.get_active_scene().unwrap().pawn.clone();
-            let ns_scene = Scene {
-                name: format!("ns-{}", namespace.clone()),
-                pawn: Pawn { texture_id: pawn.texture_id, tile: Tile::new(0, Effect::default(), Coordinates { x: 0, y: 0 }, Shape { ..Default::default() } )},
-                map: crate::presets::namespace::namespace_map(namespace.clone(), texture_floor_3, action_go_back)
-            };
-            println!("pushing scene");
-            engine.push_scene(ns_scene);
+        library.insert(format!("load-ns-{}", namespace), Box::new(Box::new({
+            let ns = ns.clone();
+            let deployments_vec = deployments_vec.clone();
+            let map = crate::maps::namespace::namespace_map(&library, deployments_vec.clone());
+            move |engine: &mut Engine| {
+                let pawn = engine.get_active_scene().unwrap().pawn.clone();
+                let ns_scene = Scene {
+                    name: format!("ns-{}", ns.clone()),
+                    pawn: Pawn { texture_id: pawn.texture_id, tile: Tile::new(0, Effect::default(), Coordinates { x: 0, y: 0 }, Shape { ..Default::default() } )},
+                    map: map.clone()
+                };
+                println!("pushing scene");
+                engine.push_scene(ns_scene);
+            }
         }) as Box<dyn Fn(&mut Engine)>) as Box<dyn Any>);
 
         library.insert(key, Box::new(Box::new(move || {
@@ -93,8 +140,6 @@ pub fn use_library(namespaces: Vec<String>) -> Library<Box<dyn Any>> {
         }) as Box<dyn Fn() -> VNode>) as Box<dyn Any>);
         
     }
-
-    println!("{:?}", library.get_by_key("load-ns-gitlab").is_some());
 
     library
 }

@@ -21,9 +21,9 @@ fn App() -> Element {
     let boxed_fn: Box<dyn Fn() -> Element> = Box::new(|| rsx! { div { class: "test", "Hello from box!" } });
 
     match &*kube_data.read_unchecked() {
-        Some(Ok((namespaces, services, pods))) => {
-            let k8s_library = use_signal(|| library::use_library(namespaces.clone()));
-            let map = maps::default::default_map(&k8s_library.read(), namespaces);
+        Some(Ok((namespaces, deployments, pods))) => {
+            let k8s_library = use_signal(|| library::use_library(namespaces, deployments, pods));
+            let map = maps::cluster::cluster_map(&k8s_library.read(), namespaces);
 
             match map.get_base_layer() {
                 Some(layer) => {
