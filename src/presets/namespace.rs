@@ -37,7 +37,7 @@ pub fn building_2x3(shape: Shape, texture_id: i32, action_id: i32) -> Map {
     let (start_x, end_x) = if shape.width % 2 == 0 {
         let mid_left = shape.width / 2 - 1;
         let mid_right = shape.width / 2;
-        (mid_left, mid_right + 1)
+        (mid_left, mid_right)
     } else {
         let mid = shape.width / 2;
         (mid, mid + 1)
@@ -80,7 +80,7 @@ pub fn building_2x3(shape: Shape, texture_id: i32, action_id: i32) -> Map {
 }
 
 
-pub fn namespace_map(library: &Library<Box<dyn Any>>, namespace: String) -> Map {
+pub fn namespaces_map(library: &Library<Box<dyn Any>>, namespace: String) -> Map {
     let mut map = building_2x3(
         Shape {
             width: 8,
@@ -92,23 +92,23 @@ pub fn namespace_map(library: &Library<Box<dyn Any>>, namespace: String) -> Map 
     map.load_layer(rpgx::factory::layer::presets::ground::ground_layer(
         Shape {
             width: 8,
-            height: 10,
+            height: 11,
         },
         library.get_id("floor_1").unwrap(),
     ));
     map.load_layer(rpgx::factory::layer::presets::street::street_layer_around(
         Shape {
             width: 8,
-            height: 10,
+            height: 11,
         },
         library.get_id("floor_2").unwrap(),
     ));
     map.load_layer(rpgx::factory::layer::presets::street::street_layer_around(
         Shape {
             width: 10,
-            height: 12,
+            height: 13,
         },
-        library.get_id("floor_2").unwrap(),
+        library.get_id("floor_3").unwrap(),
     ));
     
 
@@ -123,4 +123,46 @@ pub fn namespace_map(library: &Library<Box<dyn Any>>, namespace: String) -> Map 
     
 
     map
+}
+
+pub fn namespace_map(namespace: String, texture_id: i32, action_id: i32) -> Map {
+    let mut map = Map {
+        name: format!("namespace-{}", namespace),
+        layers: vec![]
+    };
+    let shape = Shape {
+        width: 10,
+        height: 10,
+    };
+    map.load_layer(rpgx::factory::layer::presets::ground::ground_layer(
+        shape,
+        texture_id,
+    ));
+    map.load_layer(Layer::new(
+        "actions".to_string(),
+        LayerType::Action,
+        shape,
+        vec![Mask {
+            name: "action_test".to_string(),
+            effect: rpgx::prelude::Effect {
+                action_id: Some(action_id),
+                texture_id: Some(2),
+                ..Default::default()
+            },
+            selector: Selector::Block((
+                Coordinates {
+                    x: shape.width / 2,
+                    y: shape.height -1 ,
+                },
+                Coordinates {
+                    x: (shape.width / 2) + 1,
+                    y: shape.height -1 ,
+                },
+            )),
+        }],
+        6,
+    ));
+
+    map
+    
 }

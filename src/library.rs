@@ -59,21 +59,23 @@ pub fn use_library(namespaces: Vec<String>) -> Library<Box<dyn Any>> {
         }
     })));
 
+    library.insert("go_back", Box::new(Box::new(move |engine: &mut Engine| {
+        engine.pop_scene();
+    }) as Box<dyn Fn(&mut Engine)>) as Box<dyn Any>);
+
     for namespace in namespaces {
         let key = format!("sign-ns-{}", namespace);
         let ns = namespace.clone();
-
+        let texture_floor_3 = library.get_id("floor_3").unwrap();
+        let action_go_back = library.get_id("go_back").unwrap();
         println!("inserting namespace resources");
 
         library.insert(format!("load-ns-{}", namespace), Box::new(Box::new(move |engine: &mut Engine| {
             let pawn = engine.get_active_scene().unwrap().pawn.clone();
             let ns_scene = Scene {
-                name: format!("ns-{}", namespace),
+                name: format!("ns-{}", namespace.clone()),
                 pawn: Pawn { texture_id: pawn.texture_id, tile: Tile::new(0, Effect::default(), Coordinates { x: 0, y: 0 }, Shape { ..Default::default() } )},
-                map: Map {
-                    name: format!("ns-{}", namespace),
-                    layers: vec![]
-                }
+                map: crate::presets::namespace::namespace_map(namespace.clone(), texture_floor_3, action_go_back)
             };
             println!("pushing scene");
             engine.push_scene(ns_scene);
