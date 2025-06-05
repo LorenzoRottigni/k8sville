@@ -87,7 +87,7 @@ pub fn namespace_preset(library: &Library<Box<dyn Any>>, namespace: String) -> M
             height: 8,
         },
         library.get_id("namespace").unwrap(),
-        library.get_id(format!("load-ns-{}", namespace)).unwrap(),
+        library.get_id(format!("load-namespace-{}", namespace)).unwrap(),
     );
     map.load_layer(rpgx::factory::layer::presets::ground::ground_layer(
         Shape {
@@ -115,7 +115,7 @@ pub fn namespace_preset(library: &Library<Box<dyn Any>>, namespace: String) -> M
     map.load_layer(Layer::new("sign".into(), LayerType::Block, Shape { width: 10, height: 12 }, vec![
         Mask {
             name: "sign".into(),
-            effect: rpgx::prelude::Effect { render_id: library.get_id(format!("sign-ns-{:}", namespace)), group: true, ..Default::default() },
+            effect: rpgx::prelude::Effect { render_id: library.get_id(format!("sign-namespace-{:}", namespace)), group: true, ..Default::default() },
             selector: Selector::Block((Coordinates { x: 6, y: 2 }, Coordinates { x: 9, y: 3 }))
         }
     ], 8 ));

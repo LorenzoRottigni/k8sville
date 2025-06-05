@@ -2,7 +2,7 @@ use std::any::Any;
 use dioxus::prelude::*;
 use rpgx::{engine::Engine, library::Library, map::Map, pawn::Pawn, prelude::{Coordinates, Effect, Shape, Tile}, scene::Scene};
 
-pub fn use_library(namespaces: &Vec<String>, deployments: &Vec<(String, String)>, pods: &Vec<(String, String)>) -> Library<Box<dyn Any>> {
+pub fn use_library(namespaces: Vec<crate::kube::k8s::Namespace>) -> Library<Box<dyn Any>> {
     let mut library: Library<Box<dyn Any>> = Library::new();
 
     // Platform-agnostic logger
@@ -74,113 +74,153 @@ pub fn use_library(namespaces: &Vec<String>, deployments: &Vec<(String, String)>
     library.insert("go_back", Box::new(Box::new(move |engine: &mut Engine| {
         engine.pop_scene();
     }) as Box<dyn Fn(&mut Engine)>) as Box<dyn Any>);
-
-    for (_deployment, pod) in pods {
-        let key = format!("sign-pod-{}", pod);
-        let ns = pod.clone();
-        println!("inserting namespace resources");
-        let pods_vec: Vec<String> = pods.iter().map(|(d, _)| d.clone()).collect();
-
-        library.insert(format!("load-pod-{}", pod), Box::new(Box::new({
-            let ns = ns.clone();
-            let pods_vec = pods_vec.clone();
-            let map = crate::maps::pod::pod_map(&library);
-            move |engine: &mut Engine| {
-                let pawn = engine.get_active_scene().unwrap().pawn.clone();
-                let ns_scene = Scene {
-                    name: format!("pod-{}", ns.clone()),
-                    pawn: Pawn { texture_id: pawn.texture_id, tile: Tile::new(0, Effect::default(), Coordinates { x: 0, y: 0 }, Shape { ..Default::default() } )},
-                    map: map.clone()
-                };
-                println!("pushing scene");
-                engine.push_scene(ns_scene);
-            }
-        }) as Box<dyn Fn(&mut Engine)>) as Box<dyn Any>);
-
-        library.insert(key, Box::new(Box::new(move || {
-            println!("Invoked render closure for sign");
-            rsx! {
-                div {
-                    class: "sign",
-                    style: "width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; text-align: center; color: white; border: solid 2px black; border-radius: 5px;",
-                    {ns.clone()} // clone here to avoid move
-                }
-            }.unwrap()
-        }) as Box<dyn Fn() -> VNode>) as Box<dyn Any>);
-
-    }
-
-
-    for (_namespace, deployment) in deployments {
-        let key = format!("sign-deployment-{}", deployment);
-        let ns = deployment.clone();
-        println!("inserting namespace resources");
-        let deployments_vec: Vec<String> = deployments.iter().map(|(d, _)| d.clone()).collect();
-
-        library.insert(format!("load-deployment-{}", deployment), Box::new(Box::new({
-            let ns = ns.clone();
-            let deployments_vec = deployments_vec.clone();
-            let map = crate::maps::deployment::deployment_map(&library, pods);
-            move |engine: &mut Engine| {
-                let pawn = engine.get_active_scene().unwrap().pawn.clone();
-                let ns_scene = Scene {
-                    name: format!("deployment-{}", ns.clone()),
-                    pawn: Pawn { texture_id: pawn.texture_id, tile: Tile::new(0, Effect::default(), Coordinates { x: 0, y: 0 }, Shape { ..Default::default() } )},
-                    map: map.clone()
-                };
-                println!("pushing scene");
-                engine.push_scene(ns_scene);
-            }
-        }) as Box<dyn Fn(&mut Engine)>) as Box<dyn Any>);
-
-        library.insert(key, Box::new(Box::new(move || {
-            println!("Invoked render closure for sign");
-            rsx! {
-                div {
-                    class: "sign",
-                    style: "width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; text-align: center; color: white; border: solid 2px black; border-radius: 5px;",
-                    {ns.clone()} // clone here to avoid move
-                }
-            }.unwrap()
-        }) as Box<dyn Fn() -> VNode>) as Box<dyn Any>);
-
-    }
-
     
-    for namespace in namespaces {
-        let key = format!("sign-ns-{}", namespace);
-        let ns = namespace.clone();
-        println!("inserting namespace resources");
-        let deployments_vec: Vec<String> = deployments.iter().map(|(_, d)| d.clone()).collect();
+    for namespace in &namespaces {
+        let namespace_name = namespace.name.clone();
 
-        library.insert(format!("load-ns-{}", namespace), Box::new(Box::new({
-            let ns = ns.clone();
-            let deployments_vec = deployments_vec.clone();
-            let map = crate::maps::namespace::namespace_map(&library, deployments_vec.clone());
-            move |engine: &mut Engine| {
-                let pawn = engine.get_active_scene().unwrap().pawn.clone();
-                let ns_scene = Scene {
-                    name: format!("ns-{}", ns.clone()),
-                    pawn: Pawn { texture_id: pawn.texture_id, tile: Tile::new(0, Effect::default(), Coordinates { x: 0, y: 0 }, Shape { ..Default::default() } )},
-                    map: map.clone()
-                };
-                println!("pushing scene");
-                engine.push_scene(ns_scene);
-            }
-        }) as Box<dyn Fn(&mut Engine)>) as Box<dyn Any>);
+        for deployment in &namespace.deployments {
+            let deployment_name = deployment.name.clone();
 
-        library.insert(key, Box::new(Box::new(move || {
-            println!("Invoked render closure for sign");
-            rsx! {
-                div {
-                    class: "sign",
-                    style: "width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; text-align: center; color: white; border: solid 2px black; border-radius: 5px;",
-                    {ns.clone()} // clone here to avoid move
+            for pod in &deployment.pods {
+                let pod_name = pod.name.clone();
+
+                // Insert pod scene loader
+                {
+                    let key = format!("load-pod-{}", pod_name);
+                    let map = crate::maps::pod::pod_map(&library);
+                    let name_for_scene = pod_name.clone();
+                    library.insert(
+                        key,
+                        Box::new(Box::new(move |engine: &mut Engine| {
+                            let pawn = engine.get_active_scene().unwrap().pawn.clone();
+                            let ns_scene = Scene {
+                                name: format!("pod-{}", name_for_scene),
+                                pawn: Pawn {
+                                    texture_id: pawn.texture_id,
+                                    tile: Tile::new(
+                                        0,
+                                        Effect::default(),
+                                        Coordinates { x: 0, y: 0 },
+                                        Shape::default(),
+                                    ),
+                                },
+                                map: map.clone(),
+                            };
+                            engine.push_scene(ns_scene);
+                        }) as Box<dyn Fn(&mut Engine)>) as Box<dyn Any>,
+                    );
                 }
-            }.unwrap()
-        }) as Box<dyn Fn() -> VNode>) as Box<dyn Any>);
+
+                // Insert pod sign renderer
+                {
+                    let key = format!("sign-pod-{}", pod_name);
+                    library.insert(
+                        key,
+                        Box::new(Box::new(move || {
+                            rsx! {
+                                div {
+                                    class: "sign",
+                                    style: "width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; text-align: center; color: white; border: solid 2px black; border-radius: 5px;",
+                                    {pod_name.clone()}
+                                }
+                            }.unwrap()
+                        }) as Box<dyn Fn() -> VNode>) as Box<dyn Any>,
+                    );
+                }
+            }
+            
+            // Insert deployment scene loader
+            {
+                let key = format!("load-deployment-{}", deployment_name);
+                let map = crate::maps::deployment::deployment_map(&library, deployment.clone());
+                let name_for_scene = deployment_name.clone();
+                library.insert(
+                    key,
+                    Box::new(Box::new(move |engine: &mut Engine| {
+                        let pawn = engine.get_active_scene().unwrap().pawn.clone();
+                        let deployment_scene = Scene {
+                            name: format!("deployment-{}", name_for_scene),
+                            pawn: Pawn {
+                                texture_id: pawn.texture_id,
+                                tile: Tile::new(
+                                    0,
+                                    Effect::default(),
+                                    Coordinates { x: 0, y: 0 },
+                                    Shape::default(),
+                                ),
+                            },
+                            map: map.clone(),
+                        };
+                        engine.push_scene(deployment_scene);
+                    }) as Box<dyn Fn(&mut Engine)>) as Box<dyn Any>,
+                );
+            }
+
+            // Insert deployment sign renderer
+            {
+                let key = format!("sign-deployment-{}", deployment_name);
+                library.insert(
+                    key,
+                    Box::new(Box::new(move || {
+                        rsx! {
+                            div {
+                                class: "sign",
+                                style: "width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; text-align: center; color: white; border: solid 2px black; border-radius: 5px;",
+                                {deployment_name.clone()}
+                            }
+                        }.unwrap()
+                    }) as Box<dyn Fn() -> VNode>) as Box<dyn Any>,
+                );
+            }
+
+            
+        }
         
+        // Insert namespace scene loader
+        {
+            let key = format!("load-namespace-{}", namespace_name);
+            let map = crate::maps::namespace::namespace_map(&library, namespace.clone());
+            let name_for_scene = namespace_name.clone();
+            library.insert(
+                key,
+                Box::new(Box::new(move |engine: &mut Engine| {
+                    let pawn = engine.get_active_scene().unwrap().pawn.clone();
+                    let ns_scene = Scene {
+                        name: format!("ns-{}", name_for_scene),
+                        pawn: Pawn {
+                            texture_id: pawn.texture_id,
+                            tile: Tile::new(
+                                0,
+                                Effect::default(),
+                                Coordinates { x: 0, y: 0 },
+                                Shape::default(),
+                            ),
+                        },
+                        map: map.clone(),
+                    };
+                    engine.push_scene(ns_scene);
+                }) as Box<dyn Fn(&mut Engine)>) as Box<dyn Any>,
+            );
+        }
+
+        // Insert namespace sign renderer
+        {
+            let key = format!("sign-namespace-{}", namespace_name);
+            library.insert(
+                key,
+                Box::new(Box::new(move || {
+                    rsx! {
+                        div {
+                            class: "sign",
+                            style: "width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; text-align: center; color: white; border: solid 2px black; border-radius: 5px;",
+                            {namespace_name.clone()}
+                        }
+                    }.unwrap()
+                }) as Box<dyn Fn() -> VNode>) as Box<dyn Any>,
+            );
+        }
     }
+
 
     library
 }

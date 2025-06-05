@@ -2,8 +2,10 @@ use std::any::Any;
 
 use rpgx::{library::Library, prelude::*};
 
-pub fn deployment_map(library: &Library<Box<dyn Any>>, pods: &Vec<(String,String)>) -> Map {
-    let total = pods.len();
+use crate::maps::deployment;
+
+pub fn deployment_map(library: &Library<Box<dyn Any>>, deployment: crate::kube::k8s::Deployment) -> Map {
+    let total = deployment.pods.len();
     if total == 0 {
         return Map::new("default".into(), vec![]);
     }
@@ -14,7 +16,7 @@ pub fn deployment_map(library: &Library<Box<dyn Any>>, pods: &Vec<(String,String
 
     let mut map = Map::new("default".into(), vec![]);
 
-    for (i, (deployment,pod)) in pods.iter().enumerate() {
+    for (i, pod) in deployment.pods.iter().enumerate() {
         let row = (i / cols) as i32;
         let col = (i % cols) as i32;
 

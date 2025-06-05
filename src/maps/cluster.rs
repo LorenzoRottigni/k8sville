@@ -3,7 +3,7 @@ use std::any::Any;
 use rpgx::{library::Library, prelude::*};
 use crate::presets::namespace::namespace_preset;
 
-pub fn cluster_map(library: &Library<Box<dyn Any>>, namespaces: &Vec<String>) -> Map {
+pub fn cluster_map(library: &Library<Box<dyn Any>>, namespaces: &Vec<crate::kube::k8s::Namespace>) -> Map {
     let total = namespaces.len();
     if total == 0 {
         return Map::new("default".into(), vec![]);
@@ -19,7 +19,7 @@ pub fn cluster_map(library: &Library<Box<dyn Any>>, namespaces: &Vec<String>) ->
         let row = (i / cols) as i32;
         let col = (i % cols) as i32;
 
-        let ns_map = namespace_preset(library, namespace.clone());
+        let ns_map = namespace_preset(library, namespace.name.clone());
         let shape = ns_map.get_shape();
 
         // Calculate position to merge the namespace map

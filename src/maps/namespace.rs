@@ -2,8 +2,8 @@ use std::any::Any;
 
 use rpgx::{library::Library, prelude::*};
 
-pub fn namespace_map(library: &Library<Box<dyn Any>>, deployments: Vec<String>) -> Map {
-    let total = deployments.len();
+pub fn namespace_map(library: &Library<Box<dyn Any>>, namespace: crate::kube::k8s::Namespace) -> Map {
+    let total = namespace.deployments.len();
     if total == 0 {
         return Map::new("default".into(), vec![]);
     }
@@ -14,7 +14,7 @@ pub fn namespace_map(library: &Library<Box<dyn Any>>, deployments: Vec<String>) 
 
     let mut map = Map::new("default".into(), vec![]);
 
-    for (i, deployment) in deployments.iter().enumerate() {
+    for (i, deployment) in namespace.deployments.iter().enumerate() {
         let row = (i / cols) as i32;
         let col = (i % cols) as i32;
 

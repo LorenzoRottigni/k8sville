@@ -1,46 +1,73 @@
 use std::path::PathBuf;
 use kube::{Api, Client, Config, api::ListParams};
 use kube::config::Kubeconfig;
-use k8s_openapi::api::core::v1::{Namespace, Pod};
-use k8s_openapi::api::apps::v1::Deployment;
+use k8s_openapi::api::core::v1::{Namespace as K8sNamespace, Pod as K8sPod};
+use k8s_openapi::api::apps::v1::Deployment as K8sDeployment;
+
+pub mod k8s {
+    #[derive(Debug, Clone)]
+    pub struct Namespace {
+        pub name: String,
+        pub deployments: Vec<Deployment>,
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct Deployment {
+        pub name: String,
+        pub pods: Vec<Pod>,
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct Pod {
+        pub name: String,
+    }
+}
 
 pub async fn fetch_k8s_data(
     kubeconfig_path: PathBuf,
-) -> anyhow::Result<(Vec<String>, Vec<(String, String)>, Vec<(String, String)>)> {
+) -> anyhow::Result<Vec<k8s::Namespace>> {
     let kubeconfig = Kubeconfig::read_from(kubeconfig_path)?;
     let config = Config::from_custom_kubeconfig(kubeconfig, &Default::default()).await?;
     let client = Client::try_from(config)?;
 
-    let mut namespaces = vec![];
-    let mut deployments = vec![];
-    let mut pods = vec![];
+    let ns_api: Api<K8sNamespace> = Api::all(client.clone());
+    let ns_list = ns_api.list(&ListParams::default()).await?;
 
-    let ns_api: Api<Namespace> = Api::all(client.clone());
-    for ns in ns_api.list(&ListParams::default()).await?.items {
+    let mut result = Vec::new();
+
+    for ns in ns_list.items {
         if let Some(ns_name) = ns.metadata.name.clone() {
-            namespaces.push(ns_name.clone());
+            let mut deployments_vec = Vec::new();
 
-            // Deployments
-            let deploy_api: Api<Deployment> = Api::namespaced(client.clone(), &ns_name);
-            if let Ok(deploys) = deploy_api.list(&ListParams::default()).await {
-                for d in deploys.items {
-                    if let Some(name) = d.metadata.name {
-                        deployments.push((ns_name.clone(), name));
+            let deploy_api: Api<K8sDeployment> = Api::namespaced(client.clone(), &ns_name);
+            if let Ok(deployments) = deploy_api.list(&ListParams::default()).await {
+                for d in deployments.items {
+                    if let Some(deploy_name) = d.metadata.name.clone() {
+                        let pods_api: Api<K8sPod> = Api::namespaced(client.clone(), &ns_name);
+                        let mut pods_vec = Vec::new();
+
+                        if let Ok(pods) = pods_api.list(&ListParams::default()).await {
+                            for p in pods.items {
+                                if let Some(pod_name) = p.metadata.name.clone() {
+                                    pods_vec.push(k8s::Pod { name: pod_name });
+                                }
+                            }
+                        }
+
+                        deployments_vec.push(k8s::Deployment {
+                            name: deploy_name,
+                            pods: pods_vec,
+                        });
                     }
                 }
             }
 
-            // Pods
-            let pods_api: Api<Pod> = Api::namespaced(client.clone(), &ns_name);
-            if let Ok(pod_list) = pods_api.list(&ListParams::default()).await {
-                for p in pod_list.items {
-                    if let Some(name) = p.metadata.name {
-                        pods.push((ns_name.clone(), name));
-                    }
-                }
-            }
+            result.push(k8s::Namespace {
+                name: ns_name,
+                deployments: deployments_vec,
+            });
         }
     }
 
-    Ok((namespaces, deployments, pods))
+    Ok(result)
 }

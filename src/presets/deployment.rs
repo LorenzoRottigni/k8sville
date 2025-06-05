@@ -80,14 +80,14 @@ pub fn building(shape: Shape, texture_id: i32, action_id: i32) -> Map {
 }
 
 
-pub fn deployment_preset(library: &Library<Box<dyn Any>>, deployment: String) -> Map {
+pub fn deployment_preset(library: &Library<Box<dyn Any>>, deployment: crate::kube::k8s::Deployment) -> Map {
     let mut map = building(
         Shape {
             width: 10,
             height: 8,
         },
         library.get_id("deployment").unwrap(),
-        library.get_id(format!("load-deployment-{}", deployment)).unwrap(),
+        library.get_id(format!("load-deployment-{}", deployment.name)).unwrap(),
     );
     map.load_layer(rpgx::factory::layer::presets::ground::ground_layer(
         Shape {
@@ -115,7 +115,7 @@ pub fn deployment_preset(library: &Library<Box<dyn Any>>, deployment: String) ->
     map.load_layer(Layer::new("sign".into(), LayerType::Block, Shape { width: 10, height: 12 }, vec![
         Mask {
             name: "sign".into(),
-            effect: rpgx::prelude::Effect { render_id: library.get_id(format!("sign-deployment-{:}", deployment)), group: true, ..Default::default() },
+            effect: rpgx::prelude::Effect { render_id: library.get_id(format!("sign-deployment-{:}", deployment.name)), group: true, ..Default::default() },
             selector: Selector::Block((Coordinates { x: 6, y: 2 }, Coordinates { x: 9, y: 3 }))
         }
     ], 8 ));

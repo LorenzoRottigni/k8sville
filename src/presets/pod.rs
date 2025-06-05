@@ -80,14 +80,14 @@ pub fn building(shape: Shape, texture_id: i32, action_id: i32) -> Map {
 }
 
 
-pub fn pod_preset(library: &Library<Box<dyn Any>>, pod: String) -> Map {
+pub fn pod_preset(library: &Library<Box<dyn Any>>, pod: crate::kube::k8s::Pod) -> Map {
     let mut map = building(
         Shape {
             width: 10,
             height: 8,
         },
         library.get_id("pod").unwrap(),
-        library.get_id(format!("load-pod-{}", pod)).unwrap(),
+        library.get_id(format!("load-pod-{}", pod.name)).unwrap(),
     );
     map.load_layer(rpgx::factory::layer::presets::ground::ground_layer(
         Shape {
@@ -115,7 +115,7 @@ pub fn pod_preset(library: &Library<Box<dyn Any>>, pod: String) -> Map {
     map.load_layer(Layer::new("sign".into(), LayerType::Block, Shape { width: 10, height: 12 }, vec![
         Mask {
             name: "sign".into(),
-            effect: rpgx::prelude::Effect { render_id: library.get_id(format!("sign-pod-{:}", pod)), group: true, ..Default::default() },
+            effect: rpgx::prelude::Effect { render_id: library.get_id(format!("sign-pod-{:}", pod.name)), group: true, ..Default::default() },
             selector: Selector::Block((Coordinates { x: 6, y: 2 }, Coordinates { x: 9, y: 3 }))
         }
     ], 8 ));
