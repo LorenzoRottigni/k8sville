@@ -43,6 +43,10 @@ pub fn use_library(namespaces: &Vec<String>, deployments: &Vec<(String, String)>
         Box::new("https://s3.rottigni.tech/k8sville/k8sville_namespace.webp".to_string()),
     );
     library.insert(
+        "pod",
+        Box::new("https://s3.rottigni.tech/k8sville/k8sville_pod.webp".to_string()),
+    );
+    library.insert(
         "portal_1",
         Box::new("https://s3.rottigni.tech/rpgx/portal_1.webp".to_string()),
     );
@@ -71,6 +75,42 @@ pub fn use_library(namespaces: &Vec<String>, deployments: &Vec<(String, String)>
         engine.pop_scene();
     }) as Box<dyn Fn(&mut Engine)>) as Box<dyn Any>);
 
+    for (_deployment, pod) in pods {
+        let key = format!("sign-pod-{}", pod);
+        let ns = pod.clone();
+        println!("inserting namespace resources");
+        let pods_vec: Vec<String> = pods.iter().map(|(d, _)| d.clone()).collect();
+
+        library.insert(format!("load-pod-{}", pod), Box::new(Box::new({
+            let ns = ns.clone();
+            let pods_vec = pods_vec.clone();
+            let map = crate::maps::pod::pod_map(&library);
+            move |engine: &mut Engine| {
+                let pawn = engine.get_active_scene().unwrap().pawn.clone();
+                let ns_scene = Scene {
+                    name: format!("pod-{}", ns.clone()),
+                    pawn: Pawn { texture_id: pawn.texture_id, tile: Tile::new(0, Effect::default(), Coordinates { x: 0, y: 0 }, Shape { ..Default::default() } )},
+                    map: map.clone()
+                };
+                println!("pushing scene");
+                engine.push_scene(ns_scene);
+            }
+        }) as Box<dyn Fn(&mut Engine)>) as Box<dyn Any>);
+
+        library.insert(key, Box::new(Box::new(move || {
+            println!("Invoked render closure for sign");
+            rsx! {
+                div {
+                    class: "sign",
+                    style: "width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; text-align: center; color: white; border: solid 2px black; border-radius: 5px;",
+                    {ns.clone()} // clone here to avoid move
+                }
+            }.unwrap()
+        }) as Box<dyn Fn() -> VNode>) as Box<dyn Any>);
+
+    }
+
+
     for (_namespace, deployment) in deployments {
         let key = format!("sign-deployment-{}", deployment);
         let ns = deployment.clone();
@@ -80,7 +120,7 @@ pub fn use_library(namespaces: &Vec<String>, deployments: &Vec<(String, String)>
         library.insert(format!("load-deployment-{}", deployment), Box::new(Box::new({
             let ns = ns.clone();
             let deployments_vec = deployments_vec.clone();
-            let map = crate::maps::deployment::deployment_map(&library, &vec![]);
+            let map = crate::maps::deployment::deployment_map(&library, pods);
             move |engine: &mut Engine| {
                 let pawn = engine.get_active_scene().unwrap().pawn.clone();
                 let ns_scene = Scene {
@@ -106,6 +146,7 @@ pub fn use_library(namespaces: &Vec<String>, deployments: &Vec<(String, String)>
 
     }
 
+    
     for namespace in namespaces {
         let key = format!("sign-ns-{}", namespace);
         let ns = namespace.clone();
