@@ -2213,9 +2213,9 @@ dependencies = [
 
 [[package]]
 name = "hyper-util"
-version = "0.1.13"
+version = "0.1.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1c293b6b3d21eca78250dc7dbebd6b9210ec5530e038cbfe0661b5c47ab06e8"
+checksum = "dc2fdfdbff08affe55bb779f33b053aa1fe5dd5b54c257343c17edfa55711bdb"
 dependencies = [
  "base64 0.22.1",
  "bytes",
@@ -3892,7 +3892,7 @@ dependencies = [
 [[package]]
 name = "rpgx"
 version = "0.1.0"
-source = "git+https://github.com/LorenzoRottigni/rpgx.git#e79684f77d6c958fd03c8259c2525dd00ccd9b37"
+source = "git+https://github.com/LorenzoRottigni/rpgx.git#992e73a2cb71c6befe554768ccce5212fa46eb4c"
 dependencies = [
  "indexmap 2.9.0",
 ]
@@ -3900,7 +3900,7 @@ dependencies = [
 [[package]]
 name = "rpgx-dioxus"
 version = "0.1.0"
-source = "git+https://github.com/LorenzoRottigni/rpgx.git#e79684f77d6c958fd03c8259c2525dd00ccd9b37"
+source = "git+https://github.com/LorenzoRottigni/rpgx.git#992e73a2cb71c6befe554768ccce5212fa46eb4c"
 dependencies = [
  "dioxus",
  "dioxus-logger",

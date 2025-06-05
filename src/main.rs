@@ -42,17 +42,6 @@ fn App() -> Element {
                                     square_size: 32,
                                 }
                             }
-                            {
-                                if let Some(f) = k8s_library.read()
-                                    .get_by_key("sign-ns-gitlab")
-                                    .unwrap()
-                                    .downcast_ref::<Box<dyn Fn() -> VNode>>()
-                                {
-                                    f()
-                                } else {
-                                    rsx! { div { "problems" }}.unwrap()
-                                }
-                            }
                         }
                     } else {
                         rsx! { div { "no base tile" } }
