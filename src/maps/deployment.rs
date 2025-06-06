@@ -2,8 +2,6 @@ use std::any::Any;
 
 use rpgx::{library::Library, prelude::*};
 
-use crate::maps::deployment;
-
 pub fn deployment_map(library: &Library<Box<dyn Any>>, deployment: crate::kube::k8s::Deployment) -> Map {
     let total = deployment.pods.len();
     if total == 0 {
@@ -28,31 +26,50 @@ pub fn deployment_map(library: &Library<Box<dyn Any>>, deployment: crate::kube::
         map.merge_at(&ns_map, Coordinates { x: x_offset, y: y_offset });
     }
 
-    let hall = Map {
-        name: "hall".to_string(),
-        layers: vec![
-            Layer::new(
-                "hall".into(),
-                LayerType::Texture,
-                Shape { width: 6, height: 10 },
-                vec![
-                    Mask::new(
-                        "hall".into(),
-                        Selector::Block((Coordinates { x: 0, y: 0 }, Coordinates { x: 5, y: 9 })),
-                        Effect {
-                            texture_id: Some(2),
-                            ..Default::default()
-                        }
-                    )
-                ],
-                2
-
+    let filler_layer = Layer::new(
+        "filler".into(),
+        LayerType::Texture,
+        map.get_shape(),
+        vec![
+            Mask::new(
+                "filler".into(),
+                Selector::Block((Coordinates { x: 0, y: 0 }, Coordinates { x: map.get_shape().width, y: map.get_shape().height })),
+                Effect {
+                    texture_id: Some(2),
+                    ..Default::default()
+                }
             )
-        ]
-    };
-    let curr_shape = map.get_shape().clone();
+        ],
+        -1
+    );
 
-    map.merge_at(&hall, Coordinates { x: curr_shape.width / 2, y: curr_shape.height - 1 });
+    map.load_layer(filler_layer);
+
+    // let hall = Map {
+    //     name: "hall".to_string(),
+    //     layers: vec![
+    //         Layer::new(
+    //             "hall".into(),
+    //             LayerType::Texture,
+    //             Shape { width: 6, height: 10 },
+    //             vec![
+    //                 Mask::new(
+    //                     "hall".into(),
+    //                     Selector::Block((Coordinates { x: 0, y: 0 }, Coordinates { x: 5, y: 9 })),
+    //                     Effect {
+    //                         texture_id: Some(2),
+    //                         ..Default::default()
+    //                     }
+    //                 )
+    //             ],
+    //             2
+// 
+    //         )
+    //     ]
+    // };
+    // let curr_shape = map.get_shape().clone();
+// 
+    // map.merge_at(&hall, Coordinates { x: curr_shape.width / 2, y: curr_shape.height - 1 });
 
     map
 }
