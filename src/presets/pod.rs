@@ -35,7 +35,7 @@ pub fn building(shape: Shape, texture_id: i32, action_id: i32) -> Map {
     );
 
     let (start_x, end_x) = if shape.width % 2 == 0 {
-        let mid_left = shape.width / 2 - 1;
+        let mid_left = shape.width / 2;
         let mid_right = shape.width / 2;
         (mid_left, mid_right)
     } else {
@@ -52,7 +52,6 @@ pub fn building(shape: Shape, texture_id: i32, action_id: i32) -> Map {
             name: "action_test".to_string(),
             effect: rpgx::prelude::Effect {
                 action_id: Some(action_id),
-                texture_id: Some(2),
                 ..Default::default()
             },
             selector: Selector::Block((
@@ -61,7 +60,7 @@ pub fn building(shape: Shape, texture_id: i32, action_id: i32) -> Map {
                     y: bottom_y,
                 },
                 Coordinates {
-                    x: end_x,
+                    x: end_x + 1,
                     y: bottom_y + 1,
                 },
             )),

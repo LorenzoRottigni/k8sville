@@ -29,5 +29,24 @@ pub fn cluster_map(library: &Library<Box<dyn Any>>, namespaces: &Vec<crate::kube
         map.merge_at(&ns_map, Coordinates { x: x_offset, y: y_offset });
     }
 
+    let filler_layer = Layer::new(
+        "filler".into(),
+        LayerType::Texture,
+        map.get_shape(),
+        vec![
+            Mask::new(
+                "filler".into(),
+                Selector::Block((Coordinates { x: 0, y: 0 }, Coordinates { x: map.get_shape().width, y: map.get_shape().height })),
+                Effect {
+                    texture_id: Some(2),
+                    ..Default::default()
+                }
+            )
+        ],
+        -1
+    );
+
+    map.load_layer(filler_layer);
+
     map
 }

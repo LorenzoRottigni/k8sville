@@ -12,7 +12,6 @@ pub fn deployment_map(library: &Library<Box<dyn Any>>, deployment: crate::kube::
 
     // Calculate grid dimensions
     let cols = (total as f64).sqrt().ceil() as usize;
-    // let rows = (total + cols - 1) / cols;
 
     let mut map = Map::new("default".into(), vec![]);
 
@@ -23,12 +22,37 @@ pub fn deployment_map(library: &Library<Box<dyn Any>>, deployment: crate::kube::
         let ns_map = crate::presets::pod::pod_preset(library, pod.clone());
         let shape = ns_map.get_shape();
 
-        // Calculate position to merge the namespace map
         let x_offset = col * shape.width;
         let y_offset = row * shape.height;
 
         map.merge_at(&ns_map, Coordinates { x: x_offset, y: y_offset });
     }
+
+    let hall = Map {
+        name: "hall".to_string(),
+        layers: vec![
+            Layer::new(
+                "hall".into(),
+                LayerType::Texture,
+                Shape { width: 6, height: 10 },
+                vec![
+                    Mask::new(
+                        "hall".into(),
+                        Selector::Block((Coordinates { x: 0, y: 0 }, Coordinates { x: 5, y: 9 })),
+                        Effect {
+                            texture_id: Some(2),
+                            ..Default::default()
+                        }
+                    )
+                ],
+                2
+
+            )
+        ]
+    };
+    let curr_shape = map.get_shape().clone();
+
+    map.merge_at(&hall, Coordinates { x: curr_shape.width / 2, y: curr_shape.height - 1 });
 
     map
 }
