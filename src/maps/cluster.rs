@@ -46,6 +46,35 @@ pub fn cluster_map(library: &Library<Box<dyn Any>>, namespaces: &Vec<crate::kube
         -1
     );
 
+    let hall_shape = Shape {
+        width: 8,
+        height: 4
+    };
+
+    let hall_map = Map {
+        name: "hall".into(),
+        layers: vec![
+            Layer::new(
+                "hall".into(),
+                LayerType::Texture,
+                hall_shape,
+                vec![
+                    Mask::new(
+                        "hall-ground".into(),
+                        Selector::Block((Coordinates { x: 0, y: 0 }, Coordinates { x: hall_shape.width, y: hall_shape.height })),
+                        Effect {
+                            texture_id: Some(3),
+                            ..Default::default()
+                        }
+                    )
+                ],
+                1
+            )
+        ]
+    };
+
+    map.merge_at(&hall_map, Coordinates { x: (map.get_shape().width - hall_shape.width) / 2, y: map.get_shape().height });
+
     map.load_layer(filler_layer);
 
     map

@@ -1,5 +1,4 @@
 use std::any::Any;
-
 use rpgx::{library::Library, prelude::*};
 
 pub fn namespace_map(library: &Library<Box<dyn Any>>, namespace: crate::kube::k8s::Namespace) -> Map {
@@ -19,9 +18,8 @@ pub fn namespace_map(library: &Library<Box<dyn Any>>, namespace: crate::kube::k8
 
     for deployment in &namespace.deployments {
         let ns_map = crate::presets::deployment::deployment_preset(library, deployment.clone());
-        let shape = ns_map.get_shape();
-        max_width = max_width.max(shape.width);
-        max_height = max_height.max(shape.height);
+        max_width = max_width.max(ns_map.get_shape().width);
+        max_height = max_height.max(ns_map.get_shape().height);
         ns_maps.push(Some(ns_map));
     }
 
@@ -58,8 +56,36 @@ pub fn namespace_map(library: &Library<Box<dyn Any>>, namespace: crate::kube::k8
         -1
     );
 
-    map.load_layer(filler_layer);
+    let hall_shape = Shape {
+        width: 8,
+        height: 4
+    };
 
+    let hall_map = Map {
+        name: "hall".into(),
+        layers: vec![
+            Layer::new(
+                "hall".into(),
+                LayerType::Texture,
+                hall_shape,
+                vec![
+                    Mask::new(
+                        "hall-ground".into(),
+                        Selector::Block((Coordinates { x: 0, y: 0 }, Coordinates { x: hall_shape.width, y: hall_shape.height })),
+                        Effect {
+                            texture_id: Some(3),
+                            ..Default::default()
+                        }
+                    )
+                ],
+                1
+            )
+        ]
+    };
+
+    map.merge_at(&hall_map, Coordinates { x: (map.get_shape().width - hall_shape.width) / 2, y: map.get_shape().height });
+
+    map.load_layer(filler_layer);
 
     map
 }
