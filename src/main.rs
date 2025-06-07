@@ -25,29 +25,17 @@ fn App() -> Element {
             let k8s_library = use_signal(|| library::use_library(namespaces.clone()));
             let map = maps::cluster::cluster_map(&k8s_library.read(), namespaces);
 
-            match map.get_base_layer() {
-                Some(layer) => {
-                    if let Some(tile) = layer.get_tile_at(Coordinates { x: 0, y: 0 }) {
-                        let pawn = Pawn {
-                            tile,
-                            texture_id: k8s_library.read().get_id("character_1").unwrap(),
-                        };
-                        let scene = Scene::new("default".into(),map,pawn);
-                        let engine = use_signal(|| Engine::new(scene));
-                        rsx! {
-                            div { class: "cluster",
-                                rpgx_dioxus::components::engine::Engine {
-                                    engine: engine.clone(),
-                                    library: k8s_library.clone(),
-                                    square_size: 32,
-                                }
-                            }
-                        }
-                    } else {
-                        rsx! { div { "no base tile" } }
+            let mut scene = Scene::new("default".into(),map,None);
+            scene.load_pawn(k8s_library.read().get_id("character_1").unwrap());
+            let engine = use_signal(|| Engine::new(scene));
+            rsx! {
+                div { class: "cluster",
+                    rpgx_dioxus::components::engine::Engine {
+                        engine: engine.clone(),
+                        library: k8s_library.clone(),
+                        square_size: 32,
                     }
                 }
-                None => rsx! { div { "no base layer" } },
             }
         }
         Some(Err(err)) => {

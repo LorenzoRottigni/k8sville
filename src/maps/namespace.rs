@@ -4,12 +4,12 @@ use rpgx::{library::Library, prelude::*};
 pub fn namespace_map(library: &Library<Box<dyn Any>>, namespace: crate::kube::k8s::Namespace) -> Map {
     let total = namespace.deployments.len();
     if total == 0 {
-        return Map::new("default".into(), vec![]);
+        return Map::new("default".into(), vec![], Coordinates::default());
     }
 
     let cols = (total as f64).sqrt().ceil() as usize;
     let rows = ((total + cols - 1) / cols) as usize;
-    let mut map = Map::new("default".into(), vec![]);
+    let mut map = Map::new("default".into(), vec![], Coordinates::default());
 
     // Precompute all deployment maps to determine the largest shape
     let mut ns_maps = vec![];
@@ -29,13 +29,13 @@ pub fn namespace_map(library: &Library<Box<dyn Any>>, namespace: crate::kube::k8
     }
 
     for (i, maybe_map) in ns_maps.into_iter().enumerate() {
-        let row = (i / cols) as i32;
-        let col = (i % cols) as i32;
+        let row = (i / cols) as u32;
+        let col = (i % cols) as u32;
 
         if let Some(ns_map) = maybe_map {
             let x_offset = col * max_width;
             let y_offset = row * max_height;
-            map.merge_at(&ns_map, Coordinates { x: x_offset, y: y_offset });
+            map.merge_at(&ns_map, Coordinates { x: x_offset, y: y_offset }, None);
         }
     }
 
@@ -53,7 +53,7 @@ pub fn namespace_map(library: &Library<Box<dyn Any>>, namespace: crate::kube::k8
                 }
             )
         ],
-        -1
+        0
     );
 
     let hall_shape = Shape {
@@ -61,9 +61,9 @@ pub fn namespace_map(library: &Library<Box<dyn Any>>, namespace: crate::kube::k8
         height: 4
     };
 
-    let hall_map = Map {
-        name: "hall".into(),
-        layers: vec![
+    let hall_map = Map::new(
+        "hall".into(),
+        vec![
             Layer::new(
                 "hall".into(),
                 LayerType::Texture,
@@ -80,10 +80,11 @@ pub fn namespace_map(library: &Library<Box<dyn Any>>, namespace: crate::kube::k8
                 ],
                 1
             )
-        ]
-    };
+        ],
+        Coordinates::default()
+    );
 
-    map.merge_at(&hall_map, Coordinates { x: (map.get_shape().width - hall_shape.width) / 2, y: map.get_shape().height });
+    map.merge_at(&hall_map, Coordinates { x: (map.get_shape().width - hall_shape.width) / 2, y: map.get_shape().height }, None);
 
     map.load_layer(filler_layer);
 

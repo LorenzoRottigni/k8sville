@@ -2,7 +2,7 @@ use std::any::Any;
 use dioxus::prelude::*;
 use rpgx::{library::Library, prelude::*};
 
-pub fn building(shape: Shape, texture_id: i32, action_id: i32) -> Map {
+pub fn building(shape: Shape, texture_id: u32, action_id: u32) -> Map {
     // let base_layer = Layer::base("base".to_string(), shape, vec![]);
     let building_layer = Layer::new(
         "buildings".to_string(),
@@ -75,6 +75,7 @@ pub fn building(shape: Shape, texture_id: i32, action_id: i32) -> Map {
             building_layer.clone(),
             action_layer.clone(),
         ],
+        Coordinates::default()
     )
 }
 
@@ -125,7 +126,7 @@ pub fn namespace_preset(library: &Library<Box<dyn Any>>, namespace: String) -> M
 }
 
 /*
-pub fn namespace_map(namespace: String, texture_id: i32, action_id: i32) -> Map {
+pub fn namespace_map(namespace: String, texture_id: u32, action_id: u32) -> Map {
     let mut map = Map {
         name: format!("namespace-{}", namespace),
         layers: vec![]

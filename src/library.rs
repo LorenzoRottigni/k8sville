@@ -92,21 +92,16 @@ pub fn use_library(namespaces: Vec<crate::kube::k8s::Namespace>) -> Library<Box<
                     library.insert(
                         key,
                         Box::new(Box::new(move |engine: &mut Engine| {
-                            let pawn = engine.get_active_scene().unwrap().pawn.clone();
-                            let ns_scene = Scene {
-                                name: format!("pod-{}", name_for_scene),
-                                pawn: Pawn {
-                                    texture_id: pawn.texture_id,
-                                    tile: Tile::new(
-                                        0,
-                                        Effect::default(),
-                                        Coordinates { x: 0, y: 0 },
-                                        Shape::default(),
-                                    ),
-                                },
-                                map: map.clone(),
-                            };
-                            engine.push_scene(ns_scene);
+
+                            let mut pod_scene = Scene::new(
+                                format!("pod-{}", name_for_scene),
+                                map.clone(),
+                                None
+                            );
+                            if let Some(pawn) = engine.get_active_scene().unwrap().pawn.clone() {
+                                pod_scene.load_pawn(pawn.texture_id);
+                            }
+                            engine.push_scene(pod_scene);
                         }) as Box<dyn Fn(&mut Engine)>) as Box<dyn Any>,
                     );
                 }
@@ -137,20 +132,15 @@ pub fn use_library(namespaces: Vec<crate::kube::k8s::Namespace>) -> Library<Box<
                 library.insert(
                     key,
                     Box::new(Box::new(move |engine: &mut Engine| {
-                        let pawn = engine.get_active_scene().unwrap().pawn.clone();
-                        let deployment_scene = Scene {
-                            name: format!("deployment-{}", name_for_scene),
-                            pawn: Pawn {
-                                texture_id: pawn.texture_id,
-                                tile: Tile::new(
-                                    0,
-                                    Effect::default(),
-                                    Coordinates { x: 0, y: 0 },
-                                    Shape::default(),
-                                ),
-                            },
-                            map: map.clone(),
-                        };
+                        
+                        let mut deployment_scene = Scene::new(
+                            format!("deployment-{}", name_for_scene),
+                            map.clone(),
+                            None
+                        );
+                        if let Some(pawn) = engine.get_active_scene().unwrap().pawn.clone() {
+                            deployment_scene.load_pawn(pawn.texture_id);
+                        }
                         engine.push_scene(deployment_scene);
                     }) as Box<dyn Fn(&mut Engine)>) as Box<dyn Any>,
                 );
@@ -184,20 +174,15 @@ pub fn use_library(namespaces: Vec<crate::kube::k8s::Namespace>) -> Library<Box<
             library.insert(
                 key,
                 Box::new(Box::new(move |engine: &mut Engine| {
-                    let pawn = engine.get_active_scene().unwrap().pawn.clone();
-                    let ns_scene = Scene {
-                        name: format!("ns-{}", name_for_scene),
-                        pawn: Pawn {
-                            texture_id: pawn.texture_id,
-                            tile: Tile::new(
-                                0,
-                                Effect::default(),
-                                Coordinates { x: 0, y: 0 },
-                                Shape::default(),
-                            ),
-                        },
-                        map: map.clone(),
-                    };
+                    let mut ns_scene = Scene::new(
+                        format!("ns-{}", name_for_scene),
+                        map.clone(),
+                        None
+                    );
+                    
+                    if let Some(pawn) = engine.get_active_scene().unwrap().pawn.clone() {
+                        ns_scene.load_pawn(pawn.texture_id);
+                    }
                     engine.push_scene(ns_scene);
                 }) as Box<dyn Fn(&mut Engine)>) as Box<dyn Any>,
             );
