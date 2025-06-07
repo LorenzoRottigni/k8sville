@@ -43,33 +43,68 @@ pub fn deployment_map(library: &Library<Box<dyn Any>>, deployment: crate::kube::
         0
     );
 
+    
+
+    let hall_shape = Shape {
+        width: 9,
+        height: 5
+    };
+
+    let hall_map = Map::new(
+        "hall".into(),
+        vec![
+            Layer::new(
+                "hall".into(),
+                LayerType::Texture,
+                hall_shape,
+                vec![
+                    Mask::new(
+                        "hall-ground".into(),
+                        Selector::Block((Coordinates { x: 0, y: 0 }, Coordinates { x: hall_shape.width, y: hall_shape.height })),
+                        Effect {
+                            texture_id: Some(3),
+                            ..Default::default()
+                        }
+                    )
+                ],
+                1
+            ),
+            Layer::new(
+                "action-back".into(),
+                LayerType::Action,
+                hall_shape,
+                vec![
+                    Mask::new(
+                        "action-back".into(),
+                        Selector::Block((Coordinates { x: 3, y: 4 }, Coordinates { x: 5, y: 4})),
+                        Effect {
+                            action_id: library.get_id("go_back"),
+                            texture_id: library.get_id("floor_1"),
+                            ..Default::default()
+                        }
+                    )
+                ],
+                5
+            )
+        ],
+        Coordinates::default()
+    );
+
+    let merge_offset = Coordinates {
+        x: (map.get_shape().width - hall_shape.width) / 2,
+        y: map.get_shape().height,
+    };
+
+    let center_spawn = Coordinates {
+        x: merge_offset.x + hall_shape.width / 2,
+        y: merge_offset.y + hall_shape.height - 1,
+    };
+
     map.load_layer(filler_layer);
 
-    // let hall = Map {
-    //     name: "hall".to_string(),
-    //     layers: vec![
-    //         Layer::new(
-    //             "hall".into(),
-    //             LayerType::Texture,
-    //             Shape { width: 6, height: 10 },
-    //             vec![
-    //                 Mask::new(
-    //                     "hall".into(),
-    //                     Selector::Block((Coordinates { x: 0, y: 0 }, Coordinates { x: 5, y: 9 })),
-    //                     Effect {
-    //                         texture_id: Some(2),
-    //                         ..Default::default()
-    //                     }
-    //                 )
-    //             ],
-    //             2
-// 
-    //         )
-    //     ]
-    // };
-    // let curr_shape = map.get_shape().clone();
-// 
-    // map.merge_at(&hall, Coordinates { x: curr_shape.width / 2, y: curr_shape.height - 1 });
+    map.merge_at(&hall_map, merge_offset, Some(center_spawn));
+
+    
 
     map
 }

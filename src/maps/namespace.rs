@@ -1,4 +1,5 @@
 use std::any::Any;
+use dioxus::html::li;
 use rpgx::{library::Library, prelude::*};
 
 pub fn namespace_map(library: &Library<Box<dyn Any>>, namespace: crate::kube::k8s::Namespace) -> Map {
@@ -57,8 +58,8 @@ pub fn namespace_map(library: &Library<Box<dyn Any>>, namespace: crate::kube::k8
     );
 
     let hall_shape = Shape {
-        width: 8,
-        height: 4
+        width: 9,
+        height: 5
     };
 
     let hall_map = Map::new(
@@ -79,12 +80,39 @@ pub fn namespace_map(library: &Library<Box<dyn Any>>, namespace: crate::kube::k8
                     )
                 ],
                 1
+            ),
+            Layer::new(
+                "action-back".into(),
+                LayerType::Action,
+                hall_shape,
+                vec![
+                    Mask::new(
+                        "action-back".into(),
+                        Selector::Block((Coordinates { x: 3, y: 4 }, Coordinates { x: 5, y: 4})),
+                        Effect {
+                            action_id: library.get_id("go_back"),
+                            texture_id: library.get_id("floor_1"),
+                            ..Default::default()
+                        }
+                    )
+                ],
+                5
             )
         ],
         Coordinates::default()
     );
 
-    map.merge_at(&hall_map, Coordinates { x: (map.get_shape().width - hall_shape.width) / 2, y: map.get_shape().height }, None);
+    let merge_offset = Coordinates {
+        x: (map.get_shape().width - hall_shape.width) / 2,
+        y: map.get_shape().height,
+    };
+
+    let center_spawn = Coordinates {
+        x: merge_offset.x + hall_shape.width / 2,
+        y: merge_offset.y + hall_shape.height - 1,
+    };
+
+    map.merge_at(&hall_map, merge_offset, Some(center_spawn));
 
     map.load_layer(filler_layer);
 

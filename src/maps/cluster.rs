@@ -47,8 +47,8 @@ pub fn cluster_map(library: &Library<Box<dyn Any>>, namespaces: &Vec<crate::kube
     );
 
     let hall_shape = Shape {
-        width: 8,
-        height: 4
+        width: 9,
+        height: 5
     };
 
     let hall_map = Map::new(
@@ -81,14 +81,10 @@ pub fn cluster_map(library: &Library<Box<dyn Any>>, namespaces: &Vec<crate::kube
 
     let center_spawn = Coordinates {
         x: merge_offset.x + hall_shape.width / 2,
-        y: merge_offset.y + hall_shape.height / 2,
+        y: merge_offset.y + hall_shape.height - 1,
     };
 
-    println!("computed spawn position {};{}", center_spawn.x, center_spawn.y);
-
     map.merge_at(&hall_map, merge_offset, Some(center_spawn));
-
-    println!("after merge spawn position {};{}", map.spawn.x, map.spawn.y);
 
     map.load_layer(filler_layer);
 
