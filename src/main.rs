@@ -12,13 +12,13 @@ fn main() {
     dioxus::launch(App);
 }
 
+static CSS: Asset = asset!("/assets/main.css");
+
 #[component]
 fn App() -> Element {
     let kube_data = use_resource(|| async {
         kube::fetch_k8s_data(PathBuf::from(r#"C:\Users\loren\Documents\credentials\kubeconfig-test.yml"#)).await
     });
-
-    let boxed_fn: Box<dyn Fn() -> Element> = Box::new(|| rsx! { div { class: "test", "Hello from box!" } });
 
     match &*kube_data.read_unchecked() {
         Some(Ok(namespaces)) => {
@@ -29,6 +29,7 @@ fn App() -> Element {
             scene.load_pawn(k8s_library.read().get_id("character_1").unwrap());
             let engine = use_signal(|| Engine::new(scene));
             rsx! {
+                document::Stylesheet { href: CSS },
                 div { class: "cluster",
                     rpgx_dioxus::components::engine::Engine {
                         engine: engine.clone(),
