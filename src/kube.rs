@@ -48,8 +48,14 @@ pub async fn fetch_k8s_data(
 
                         if let Ok(pods) = pods_api.list(&ListParams::default()).await {
                             for p in pods.items {
-                                if let Some(pod_name) = p.metadata.name.clone() {
-                                    pods_vec.push(k8s::Pod { name: pod_name });
+                                if let Some(owners) = &p.metadata.owner_references {
+                                    if owners.iter().any(|owner| {
+                                        owner.kind == "ReplicaSet" && owner.name.starts_with(&deploy_name)
+                                    }) {
+                                        if let Some(pod_name) = p.metadata.name.clone() {
+                                            pods_vec.push(k8s::Pod { name: pod_name });
+                                        }
+                                    }
                                 }
                             }
                         }

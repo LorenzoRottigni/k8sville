@@ -43,7 +43,7 @@ pub fn deployment_map(library: &Library<Box<dyn Any>>, deployment: crate::kube::
         0
     );
 
-    
+    map.load_layer(filler_layer);
 
     let hall_shape = Shape {
         width: 9,
@@ -100,7 +100,7 @@ pub fn deployment_map(library: &Library<Box<dyn Any>>, deployment: crate::kube::
         y: merge_offset.y + hall_shape.height - 1,
     };
 
-    map.load_layer(filler_layer);
+    
 
     map.merge_at(&hall_map, merge_offset, Some(center_spawn));
 

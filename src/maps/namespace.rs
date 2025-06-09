@@ -1,5 +1,4 @@
 use std::any::Any;
-use dioxus::html::li;
 use rpgx::{library::Library, prelude::*};
 
 pub fn namespace_map(library: &Library<Box<dyn Any>>, namespace: crate::kube::k8s::Namespace) -> Map {
@@ -57,6 +56,8 @@ pub fn namespace_map(library: &Library<Box<dyn Any>>, namespace: crate::kube::k8
         0
     );
 
+    map.load_layer(filler_layer);
+
     let hall_shape = Shape {
         width: 9,
         height: 5
@@ -113,8 +114,6 @@ pub fn namespace_map(library: &Library<Box<dyn Any>>, namespace: crate::kube::k8
     };
 
     map.merge_at(&hall_map, merge_offset, Some(center_spawn));
-
-    map.load_layer(filler_layer);
 
     map
 }

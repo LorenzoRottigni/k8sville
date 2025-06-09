@@ -46,6 +46,8 @@ pub fn cluster_map(library: &Library<Box<dyn Any>>, namespaces: &Vec<crate::kube
         0
     );
 
+    map.load_layer(filler_layer);
+
     let hall_shape = Shape {
         width: 9,
         height: 5
@@ -85,8 +87,6 @@ pub fn cluster_map(library: &Library<Box<dyn Any>>, namespaces: &Vec<crate::kube
     };
 
     map.merge_at(&hall_map, merge_offset, Some(center_spawn));
-
-    map.load_layer(filler_layer);
 
     map
 }
