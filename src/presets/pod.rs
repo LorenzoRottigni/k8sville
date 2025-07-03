@@ -1,36 +1,41 @@
 use std::any::Any;
-use dioxus::prelude::*;
-use rpgx::{library::Library, prelude::*};
+use rpgx::prelude::*;
 
 pub fn building(shape: Shape, texture_id: u32, action_id: u32) -> Map {
     // let base_layer = Layer::base("base".to_string(), shape, vec![]);
     let building_layer = Layer::new(
         "buildings".to_string(),
-        LayerType::Block,
-        shape,
-        vec![Mask {
-            name: "logo".to_string(),
-            effect: rpgx::prelude::Effect {
-                texture_id: Some(texture_id),
-                block: true,
-                group: true,
-                shrink: Some((
-                    Coordinates { x: 1, y: 1 },
-                    Coordinates {
-                        x: shape.width - 2,
-                        y: shape.height - 2,
-                    },
-                )),
-                ..Default::default()
-            },
-            selector: Selector::Block((
-                Coordinates { x: 0, y: 0 },
-                Coordinates {
-                    x: shape.width,
-                    y: shape.height,
-                },
-            )),
-        }],
+        vec![Mask::new(
+            "logo".into(),
+            Rect::from_shape(shape).into_single(),
+            vec![
+                Effect::Texture(texture_id),
+                Effect::Block(Rect::new(Coordinates::new(1,1), shape - 2))
+            ]
+        )],
+        // vec![Mask {
+            // name: "logo".to_string(),
+            // effect: rpgx::prelude::Effect {
+            //     texture_id: Some(texture_id),
+            //     block: true,
+            //     group: true,
+            //     shrink: Some((
+            //         Coordinates { x: 1, y: 1 },
+            //         Coordinates {
+            //             x: shape.width - 2,
+            //             y: shape.height - 2,
+            //         },
+            //     )),
+            //     ..Default::default()
+            // },
+            // selector: Selector::Block((
+            //     Coordinates { x: 0, y: 0 },
+            //     Coordinates {
+            //         x: shape.width,
+            //         y: shape.height,
+            //     },
+            // )),
+        // }],
         5,
     );
 
@@ -46,25 +51,25 @@ pub fn building(shape: Shape, texture_id: u32, action_id: u32) -> Map {
 
     let action_layer = Layer::new(
         "actions".to_string(),
-        LayerType::Action,
-        shape,
-        vec![Mask {
-            name: "action_test".to_string(),
-            effect: rpgx::prelude::Effect {
-                action_id: Some(action_id),
-                ..Default::default()
-            },
-            selector: Selector::Block((
-                Coordinates {
-                    x: start_x,
-                    y: bottom_y,
-                },
-                Coordinates {
-                    x: end_x + 1,
-                    y: bottom_y + 1,
-                },
-            )),
-        }],
+        vec![Mask::new(
+            "action_test".to_string(),
+            Rect::new(Coordinates::new(start_x, bottom_y), Shape::new(end_x - 1, bottom_y + 1)).into_many(),
+            vec![Effect::Action(action_id)]
+            //effect: rpgx::prelude::Effect {
+            //    action_id: Some(action_id),
+            //    ..Default::default()
+            //},
+            //selector: Selector::Block((
+            //    Coordinates {
+            //        x: start_x,
+            //        y: bottom_y,
+            //    },
+            //    Coordinates {
+            //        x: end_x + 1,
+            //        y: bottom_y + 1,
+            //    },
+            //)),
+    )],
         6,
     );
 
@@ -112,13 +117,21 @@ pub fn pod_preset(library: &Library<Box<dyn Any>>, pod: crate::kube::k8s::Pod) -
     ));
     
 
-    map.load_layer(Layer::new("sign".into(), LayerType::Block, Shape { width: 10, height: 12 }, vec![
-        Mask {
-            name: "sign".into(),
-            effect: rpgx::prelude::Effect { render_id: library.get_id(format!("sign-pod-{:}", pod.name)), group: true, ..Default::default() },
-            selector: Selector::Block((Coordinates { x: 6, y: 2 }, Coordinates { x: 9, y: 3 }))
-        }
-    ], 8 ));
+    map.load_layer(Layer::new(
+        "sign".into(),
+        vec![
+            Mask::new(
+                "sign".into(),
+                Rect::new(Coordinates::new(6,2), Shape::new(3, 1)).into_single(),
+                vec![Effect::Render(library.get_id(format!("sign-pod-{:}", pod.name)).unwrap())]
+            )
+                // name: "sign".into(),
+                // effect: rpgx::prelude::Effect { render_id: library.get_id(format!("sign-pod-{:}", pod.name)), group: true, ..Default::default() },
+                // selector: Selector::Block((Coordinates { x: 6, y: 2 }, Coordinates { x: 9, y: 3 }))
+            // }
+        ],
+        8
+    ));
 
     
 

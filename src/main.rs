@@ -24,6 +24,7 @@ fn App() -> Element {
         Some(Ok(namespaces)) => {
             let k8s_library = use_signal(|| library::use_library(namespaces.clone()));
             let map = maps::cluster::cluster_map(&k8s_library.read(), namespaces);
+            // let map = maps::namespace::namespace_map(&k8s_library.read(), &namespaces.get(0).unwrap().deployments);
 
             let mut scene = Scene::new("default".into(),map,None);
             scene.load_pawn(k8s_library.read().get_id("character_1").unwrap());

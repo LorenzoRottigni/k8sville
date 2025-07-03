@@ -1,6 +1,6 @@
 use std::any::Any;
 use dioxus::prelude::*;
-use rpgx::{engine::Engine, library::Library, map::Map, pawn::Pawn, prelude::{Coordinates, Effect, Shape, Tile}, scene::Scene};
+use rpgx::{engine::Engine, library::Library, engine::scene::Scene};
 
 pub fn use_library(namespaces: Vec<crate::kube::k8s::Namespace>) -> Library<Box<dyn Any>> {
     let mut library: Library<Box<dyn Any>> = Library::new();
@@ -132,7 +132,7 @@ pub fn use_library(namespaces: Vec<crate::kube::k8s::Namespace>) -> Library<Box<
                 library.insert(
                     key,
                     Box::new(Box::new(move |engine: &mut Engine| {
-                        
+                        println!("pushing new scene");
                         let mut deployment_scene = Scene::new(
                             format!("deployment-{}", name_for_scene),
                             map.clone(),
@@ -142,6 +142,7 @@ pub fn use_library(namespaces: Vec<crate::kube::k8s::Namespace>) -> Library<Box<
                             deployment_scene.load_pawn(pawn.texture_id);
                         }
                         engine.push_scene(deployment_scene);
+                        println!("active_scene: {:?}", engine.get_active_scene().is_some())
                     }) as Box<dyn Fn(&mut Engine)>) as Box<dyn Any>,
                 );
             }
@@ -169,7 +170,7 @@ pub fn use_library(namespaces: Vec<crate::kube::k8s::Namespace>) -> Library<Box<
         // Insert namespace scene loader
         {
             let key = format!("load-namespace-{}", namespace_name);
-            let map = crate::maps::namespace::namespace_map(&library, namespace.clone());
+            let map = crate::maps::namespace::namespace_map(&library, &namespace.deployments);
             let name_for_scene = namespace_name.clone();
             library.insert(
                 key,
@@ -184,6 +185,7 @@ pub fn use_library(namespaces: Vec<crate::kube::k8s::Namespace>) -> Library<Box<
                         ns_scene.load_pawn(pawn.texture_id);
                     }
                     engine.push_scene(ns_scene);
+                    println!("active_scene: {:?}", engine.get_active_scene().is_some())
                 }) as Box<dyn Fn(&mut Engine)>) as Box<dyn Any>,
             );
         }

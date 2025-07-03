@@ -8,32 +8,41 @@ pub fn deployment_map(library: &Library<Box<dyn Any>>, deployment: crate::kube::
     }
 
     let cols = (total as f64).sqrt().ceil() as usize;
-    let rows = (total + cols - 1) / cols;
+    let rows = ((total + cols - 1) / cols) as usize;
+    let mut map = Map::new("default".into(), vec![], Coordinates::default());
 
-    let mut pod_maps = vec![];
+    let mut deploy_maps = vec![];
     let mut max_width = 0;
     let mut max_height = 0;
 
-    for pod in &deployment.pods {
-        let pod_map = crate::presets::pod::pod_preset(library, pod.clone());
-        max_width = max_width.max(pod_map.get_shape().width);
-        max_height = max_height.max(pod_map.get_shape().height);
-        pod_maps.push(pod_map);
+    for deployment in &deployment.pods {
+        let deploy_map = crate::presets::pod::pod_preset(library, deployment.clone());
+        max_width = max_width.max(deploy_map.get_shape().width);
+        max_height = max_height.max(deploy_map.get_shape().height);
+        deploy_maps.push(deploy_map);
     }
 
     let full_rows = total / cols;
     let remainder = total % cols;
 
-    // Pad maps with None for alignment
-    let mut padded_maps: Vec<Option<Map>> = pod_maps.iter().take(full_rows * cols).cloned().map(Some).collect();
+    // Build padded map grid with custom last row layout
+    let mut padded_maps: Vec<Option<Map>> = vec![];
 
+    // Fill full rows as usual
+    for map in deploy_maps.iter().take(full_rows * cols) {
+        padded_maps.push(Some(map.clone()));
+    }
+
+    // Handle custom alignment for last row
     if remainder > 0 {
         let mut last_row = vec![None; cols];
-        let remaining_maps = &pod_maps[full_rows * cols..];
+        let remaining_maps = &deploy_maps[full_rows * cols..];
         for (i, map) in remaining_maps.iter().enumerate() {
             let col = if i % 2 == 0 {
+                // 0 → 0, 2 → 1, 4 → 2, ...
                 i / 2
             } else {
+                // 1 → last, 3 → last - 1, 5 → last - 2, ...
                 cols - 1 - (i / 2)
             };
             last_row[col] = Some(map.clone());
@@ -41,87 +50,50 @@ pub fn deployment_map(library: &Library<Box<dyn Any>>, deployment: crate::kube::
         padded_maps.extend(last_row);
     }
 
-    let mut map = Map::new("default".into(), vec![], Coordinates::default());
-
+    // Merge all maps into final map
     for (i, maybe_map) in padded_maps.into_iter().enumerate() {
         let row = (i / cols) as u32;
         let col = (i % cols) as u32;
 
-        if let Some(pod_map) = maybe_map {
+        if let Some(deploy_map) = maybe_map {
             let x_offset = col * max_width;
             let y_offset = row * max_height;
-            map.merge_at(&pod_map, Coordinates { x: x_offset, y: y_offset }, None);
+            map.merge_at(&deploy_map, Coordinates { x: x_offset, y: y_offset }, None);
         }
     }
 
+    // Add filler
     let filler_layer = Layer::new(
         "filler".into(),
-        LayerType::Texture,
-        map.get_shape(),
-        vec![
-            Mask::new(
-                "filler".into(),
-                Selector::Block((
-                    Coordinates { x: 0, y: 0 },
-                    Coordinates {
-                        x: map.get_shape().width,
-                        y: map.get_shape().height,
-                    },
-                )),
-                Effect {
-                    texture_id: library.get_id("floor_1"),
-                    ..Default::default()
-                },
-            )
-        ],
+        vec![Mask::new(
+            "filler".into(),
+            Rect::new(Coordinates::default(), map.get_shape()).into_many(),
+            vec![Effect::Texture(library.get_id("floor_1").unwrap())]
+        )],
         0,
     );
-
     map.load_layer(filler_layer);
 
-    let hall_shape = Shape {
-        width: 9,
-        height: 5,
-    };
-
+    // Add hall
+    let hall_shape = Shape { width: 9, height: 5 };
     let hall_map = Map::new(
         "hall".into(),
         vec![
             Layer::new(
                 "hall".into(),
-                LayerType::Texture,
-                hall_shape,
                 vec![Mask::new(
                     "hall-ground".into(),
-                    Selector::Block((
-                        Coordinates { x: 0, y: 0 },
-                        Coordinates {
-                            x: hall_shape.width,
-                            y: hall_shape.height,
-                        },
-                    )),
-                    Effect {
-                        texture_id: library.get_id("floor_1"),
-                        ..Default::default()
-                    },
+                    Rect::new(Coordinates::default(), hall_shape).into_many(),
+                    vec![Effect::Texture(library.get_id("floor_1").unwrap())]
                 )],
                 1,
             ),
             Layer::new(
                 "action-back".into(),
-                LayerType::Action,
-                hall_shape,
                 vec![Mask::new(
                     "action-back".into(),
-                    Selector::Block((
-                        Coordinates { x: 3, y: 4 },
-                        Coordinates { x: 5, y: 4 },
-                    )),
-                    Effect {
-                        action_id: library.get_id("go_back"),
-                        texture_id: library.get_id("floor_3"),
-                        ..Default::default()
-                    },
+                    Rect::new(Coordinates::new(3,4), Shape::new(2,1)).into_many(),
+                    vec![Effect::Texture(library.get_id("floor_3").unwrap()), Effect::Action(library.get_id("go_back").unwrap())]
                 )],
                 5,
             ),

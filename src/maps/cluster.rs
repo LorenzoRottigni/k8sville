@@ -63,21 +63,10 @@ pub fn cluster_map(library: &Library<Box<dyn Any>>, namespaces: &Vec<crate::kube
     // Step 5: Add filler layer
     let filler_layer = Layer::new(
         "filler".into(),
-        LayerType::Texture,
-        map.get_shape(),
         vec![Mask::new(
             "filler".into(),
-            Selector::Block((
-                Coordinates { x: 0, y: 0 },
-                Coordinates {
-                    x: map.get_shape().width,
-                    y: map.get_shape().height,
-                },
-            )),
-            Effect {
-                texture_id: library.get_id("floor_1"),
-                ..Default::default()
-            },
+            Rect::from_shape(map.get_shape()).into_many(),
+            vec![Effect::Texture(library.get_id("floor_1").unwrap())]
         )],
         0,
     );
@@ -89,21 +78,10 @@ pub fn cluster_map(library: &Library<Box<dyn Any>>, namespaces: &Vec<crate::kube
         "hall".into(),
         vec![Layer::new(
             "hall".into(),
-            LayerType::Texture,
-            hall_shape,
             vec![Mask::new(
                 "hall-ground".into(),
-                Selector::Block((
-                    Coordinates { x: 0, y: 0 },
-                    Coordinates {
-                        x: hall_shape.width,
-                        y: hall_shape.height,
-                    },
-                )),
-                Effect {
-                    texture_id: library.get_id("floor_1"),
-                    ..Default::default()
-                },
+                Rect::new(Coordinates::default(), hall_shape).into_many(),
+                vec![Effect::Texture(library.get_id("floor_1").unwrap())]
             )],
             1,
         )],
