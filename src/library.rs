@@ -47,12 +47,16 @@ pub fn use_library(namespaces: Vec<crate::kube::k8s::Namespace>) -> Library<Box<
         Box::new("https://s3.rottigni.tech/k8sville/k8sville_pod.webp".to_string()),
     );
     library.insert(
-        "portal_1",
-        Box::new("https://s3.rottigni.tech/rpgx/portal_1.webp".to_string()),
+        "namespace_portal",
+        Box::new("https://s3.rottigni.tech/k8sville/k8sville_namespace_portal.webp".to_string()),
     );
     library.insert(
         "character_1",
         Box::new("https://s3.rottigni.tech/rpgx/character_1.webp".to_string()),
+    );
+    library.insert(
+        "k8sville_logo",
+        Box::new("https://s3.rottigni.tech/rpgx/k8sville_1.webp".to_string()),
     );
     // Platform-agnostic action
     library.insert("consolelog", Box::new(Box::new(|| {
@@ -141,8 +145,8 @@ pub fn use_library(namespaces: Vec<crate::kube::k8s::Namespace>) -> Library<Box<
                         if let Some(pawn) = engine.get_active_scene().unwrap().pawn.clone() {
                             deployment_scene.load_pawn(pawn.texture_id);
                         }
-                        engine.push_scene(deployment_scene);
-                        println!("active_scene: {:?}", engine.get_active_scene().is_some())
+                        engine.push_scene(deployment_scene.clone());
+                        println!("active_scene: {:?}", engine.get_active_scene().unwrap().name)
                     }) as Box<dyn Fn(&mut Engine)>) as Box<dyn Any>,
                 );
             }
@@ -171,12 +175,13 @@ pub fn use_library(namespaces: Vec<crate::kube::k8s::Namespace>) -> Library<Box<
         {
             let key = format!("load-namespace-{}", namespace_name);
             let map = crate::maps::namespace::namespace_map(&library, &namespace.deployments);
+            println!("namespace {namespace_name} map layers: {:?}", map.layers.len());
             let name_for_scene = namespace_name.clone();
             library.insert(
                 key,
                 Box::new(Box::new(move |engine: &mut Engine| {
                     let mut ns_scene = Scene::new(
-                        format!("ns-{}", name_for_scene),
+                        format!("namespace-{}", name_for_scene),
                         map.clone(),
                         None
                     );
@@ -184,8 +189,7 @@ pub fn use_library(namespaces: Vec<crate::kube::k8s::Namespace>) -> Library<Box<
                     if let Some(pawn) = engine.get_active_scene().unwrap().pawn.clone() {
                         ns_scene.load_pawn(pawn.texture_id);
                     }
-                    engine.push_scene(ns_scene);
-                    println!("active_scene: {:?}", engine.get_active_scene().is_some())
+                    engine.push_scene(ns_scene.clone());
                 }) as Box<dyn Fn(&mut Engine)>) as Box<dyn Any>,
             );
         }

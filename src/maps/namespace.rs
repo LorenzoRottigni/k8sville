@@ -1,6 +1,6 @@
 use std::any::Any;
-use rpgx::{library::{self, Library}, prelude::*};
-use crate::presets::{deployment::deployment_preset, namespace::namespace_preset};
+use rpgx::{library::Library, prelude::*};
+use crate::presets::{deployment::deployment_preset};
 
 pub fn namespace_map(library: &Library<Box<dyn Any>>, deployments: &Vec<crate::kube::k8s::Deployment>) -> Map {
     let total = deployments.len();
@@ -76,15 +76,26 @@ pub fn namespace_map(library: &Library<Box<dyn Any>>, deployments: &Vec<crate::k
     let hall_shape = Shape { width: 9, height: 5 };
     let hall_map = Map::new(
         "hall".into(),
-        vec![Layer::new(
-            "hall".into(),
-            vec![Mask::new(
-                "hall-ground".into(),
-                Rect::new(Coordinates::default(), hall_shape).into_many(),
-                vec![Effect::Texture(library.get_id("floor_1").unwrap())]
-            )],
-            1,
-        )],
+        vec![
+            Layer::new(
+                "hall".into(),
+                vec![Mask::new(
+                    "hall-ground".into(),
+                    Rect::new(Coordinates::default(), hall_shape).into_many(),
+                    vec![Effect::Texture(library.get_id("floor_1").unwrap())]
+                )],
+                1,
+            ),
+            Layer::new(
+                "action-back".into(),
+                vec![Mask::new(
+                    "action-back".into(),
+                    Rect::new(Coordinates::new(3,4), Shape::new(2,1)).into_many(),
+                    vec![Effect::Texture(library.get_id("floor_3").unwrap()), Effect::Action(library.get_id("go_back").unwrap())]
+                )],
+                5,
+            ),
+        ],
         Coordinates::default(),
     );
 
